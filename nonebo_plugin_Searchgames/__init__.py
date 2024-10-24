@@ -3,12 +3,27 @@ import json
 from nonebot import on_command
 from nonebot.adapters.onebot.v11 import GroupMessageEvent,MessageSegment,PrivateMessageEvent,bot,event
 from pathlib import Path
+from nonebot import require
+require("nonebot_plugin_htmlrender")
 from nonebot_plugin_htmlrender import template_to_pic
 from datetime import datetime
 
+
+__plugin_meta__ = PluginMetadata(
+    name="游戏信息查询",
+    description="查询steam和ns平台的游戏信息",
+    usage=
+    """
+    输入 搜游戏 +游戏名 查找steam平台的游戏信息
+    输入 搜ns +游戏名 查找ns平台的游戏信息
+    """,
+    type="application",
+    homepage="https://github.com/NYAGO666/nonebot-plugin-Searchgames",
+)
+
 #定义指令
 cx = on_command("搜游戏 ",aliases={"查游戏"})
-ns = on_command("搜ns ")
+ns = on_command("搜ns ",aliases={"查ns"})
 # 导入模版路径
 template_path = str(Path("./templates").resolve())  # 获取绝对路径
 template_name = "steam游戏查询.html"
