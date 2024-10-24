@@ -183,11 +183,12 @@ async def search_ns_game(event: GroupMessageEvent):
             template_name=template_name2,
             templates=gameinfo,
         )
+        #可以选择文字发送
+        #await ns.send(message)
         await ns.send("正在搜索中，请稍等...")
         await ns.finish(MessageSegment.image(output))
     except Exception as e:
         await ns.send(f"发生错误")
         print(e)
 
-    #可以选择文字发送
-    #await ns.send(message)
+
