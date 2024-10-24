@@ -108,90 +108,86 @@ async def _(event:GroupMessageEvent):
             await cx.send("该游戏或许不在steam平台？")
     else:
         await cx.send("没有找到该游戏")
-# 定义命令处理器
 @ns.handle()
 async def search_ns_game(event: GroupMessageEvent):
-    # 获取用户输入的参数
     input = event.get_plaintext().strip().removeprefix('搜ns').strip()
     
     if not input:
         await ns.send("请提供游戏名称!")
         return
+    try:
+        url = f'https://switch.jumpvg.com/jump/searchGame/list/v2?type=1&searchName={input}'
+        response = requests.get(url)
+        data = response.json()
 
-   
-    # 构建请求URL
-    url = f'https://switch.jumpvg.com/jump/searchGame/list/v2?type=1&searchName={input}'
-    response = requests.get(url)
-    data = response.json()
+        name = data["data"]["gameList"][0]['name']
+        id = data["data"]["gameList"][0]['oldGameId']
 
-    name = data["data"]["gameList"][0]['name']
-    id = data["data"]["gameList"][0]['oldGameId']
-
-    url_game = f"https://switch.jumpvg.com/jump/game/detail?id={id}"
-    res = requests.get(url_game)
-    data_game = res.json()
-    
-    game_name = data_game["data"]["jumpGame"]["name"]
-    game_tag = ', '.join(data_game["data"]["jumpGame"]["categories"])
-    game_language_qu = data_game["data"]["jumpGameExt"]["gameExtItems"][0]["value"]
-    game_img = data_game["data"]["jumpGame"]["banner"]
-    game_size = data_game["data"]["jumpGameExt"]["gameExtItems"][1]["value"]
-    game_player = data_game["data"]["jumpGameExt"]["gameExtItems"][2]["value"]
-    game_originPrice = data_game["data"]["jumpGame"].get("originPrice", None)
-    if game_originPrice is not None:
-        game_originPrice /= 100.0
-    game_lowestPrice = data_game["data"]["jumpGame"].get("lowestPrice", None)
-    if game_lowestPrice is not None:
-        game_lowestPrice /= 100.0
-    game_priceCountry = data_game["data"]["jumpGame"]["priceCountry"]
-    game_cloud = data_game["data"]["jumpGameExt"]["gameExtItems"][8]["value"]
-    game_riqi = data_game["data"]["jumpGame"]["pubDate"]
-    riqi = game_riqi / 1000.0
-    dt_object = datetime.fromtimestamp(riqi)
-    game_riqi = dt_object.strftime('%Y-%m-%d')
-
-    # DLC
-    dlc_info = []
-    for dlc in data_game["data"]["dlcList"]:
-        dlc_name = dlc.get("name", "未知")
-        dlc_price = dlc.get("price", None)
-        if dlc_price is not None:
-            dlc_price /= 100.0
-        dlc_info.append(f"{dlc_name}:{dlc_price}¥")
+        url_game = f"https://switch.jumpvg.com/jump/game/detail?id={id}"
+        res = requests.get(url_game)
+        data_game = res.json()
         
-    message = (f"游戏名：{game_name}\n"
-                f"标签：{game_tag}\n"
-                f"图片url：{game_img}\n"
-                f"中文支持：{game_language_qu}\n"
-                f"容量：{game_size}\n"
-                f"游戏人数：{game_player}\n"
-                f"支持云存档：{game_cloud}\n"
-                f"原价：{game_originPrice or '无'}¥, 史低({game_priceCountry}区): {game_lowestPrice or '无'}¥\n"
-                f"DLC(仅展示前3个)：\n" + "\n".join(dlc_info[:3]))
-    
-    gameinfo = {"标题": game_name, 
-                "图片": game_img, 
-                "原价": f"{game_originPrice or '无'}",
-                "史低区":game_priceCountry,
-                "史低": f"{game_lowestPrice or '无'}",
-                "标签": game_tag,
-                "中文支持": game_language_qu,
-                "容量": game_size,
-                "支持云存档": game_cloud,
-                "游戏人数": game_player,
-                "DLC": f"{('<br>'.join(dlc_info[:3])) or '无'}",
-                "发售日期": game_riqi,
-                }
-    output = await template_to_pic(
-        template_path=template_path,
-        template_name=template_name2,
-        templates=gameinfo,
-    )
-    await ns.send("正在搜索中，请稍等...")
-    await ns.finish(MessageSegment.image(output))
-    
+        game_name = data_game["data"]["jumpGame"]["name"]
+        game_tag = ', '.join(data_game["data"]["jumpGame"]["categories"])
+        game_language_qu = data_game["data"]["jumpGameExt"]["gameExtItems"][0]["value"]
+        game_img = data_game["data"]["jumpGame"]["banner"]
+        game_size = data_game["data"]["jumpGameExt"]["gameExtItems"][1]["value"]
+        game_player = data_game["data"]["jumpGameExt"]["gameExtItems"][2]["value"]
+        game_originPrice = data_game["data"]["jumpGame"].get("originPrice", None)
+        if game_originPrice is not None:
+            game_originPrice /= 100.0
+        game_lowestPrice = data_game["data"]["jumpGame"].get("lowestPrice", None)
+        if game_lowestPrice is not None:
+            game_lowestPrice /= 100.0
+        game_priceCountry = data_game["data"]["jumpGame"]["priceCountry"]
+        game_cloud = data_game["data"]["jumpGameExt"]["gameExtItems"][8]["value"]
+        game_riqi = data_game["data"]["jumpGame"]["pubDate"]
+        riqi = game_riqi / 1000.0
+        dt_object = datetime.fromtimestamp(riqi)
+        game_riqi = dt_object.strftime('%Y-%m-%d')
+
+        # DLC
+        dlc_info = []
+        for dlc in data_game["data"]["dlcList"]:
+            dlc_name = dlc.get("name", "未知")
+            dlc_price = dlc.get("price", None)
+            if dlc_price is not None:
+                dlc_price /= 100.0
+            dlc_info.append(f"{dlc_name}:{dlc_price}¥")
+            
+        message = (f"游戏名：{game_name}\n"
+                    f"标签：{game_tag}\n"
+                    f"图片url：{game_img}\n"
+                    f"中文支持：{game_language_qu}\n"
+                    f"容量：{game_size}\n"
+                    f"游戏人数：{game_player}\n"
+                    f"支持云存档：{game_cloud}\n"
+                    f"原价：{game_originPrice or '无'}¥, 史低({game_priceCountry}区): {game_lowestPrice or '无'}¥\n"
+                    f"DLC(仅展示前3个)：\n" + "\n".join(dlc_info[:3]))
+        
+        gameinfo = {"标题": game_name, 
+                    "图片": game_img, 
+                    "原价": f"{game_originPrice or '无'}",
+                    "史低区":game_priceCountry,
+                    "史低": f"{game_lowestPrice or '无'}",
+                    "标签": game_tag,
+                    "中文支持": game_language_qu,
+                    "容量": game_size,
+                    "支持云存档": game_cloud,
+                    "游戏人数": game_player,
+                    "DLC": f"{('<br>'.join(dlc_info[:3])) or '无'}",
+                    "发售日期": game_riqi,
+                    }
+        output = await template_to_pic(
+            template_path=template_path,
+            template_name=template_name2,
+            templates=gameinfo,
+        )
+        await ns.send("正在搜索中，请稍等...")
+        await ns.finish(MessageSegment.image(output))
+    except Exception as e:
+        await ns.send(f"发生错误")
+        print(e)
+
     #可以选择文字发送
     #await ns.send(message)
-
-
-
